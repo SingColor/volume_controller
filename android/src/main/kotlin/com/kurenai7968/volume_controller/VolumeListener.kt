@@ -15,7 +15,11 @@ class VolumeListener(private val context: Context, private val audioManager: Aud
         val fetchInitialVolume = args?.get(EventArgument.FETCH_INITIAL_VOLUME) as? Boolean ?: false
 
         volumeBroadcastReceiver = VolumeBroadcastReceiver(events, audioManager)
-        context.registerReceiver(volumeBroadcastReceiver, IntentFilter(VOLUME_CHANGED_ACTION))
+        val filter = IntentFilter().apply {
+            addAction(VOLUME_CHANGED_ACTION)
+            addAction(AudioManager.ACTION_HEADSET_PLUG)
+        }
+        context.registerReceiver(volumeBroadcastReceiver, filter)
 
         if (fetchInitialVolume) {
             events?.success(audioManager.getVolume())
@@ -28,7 +32,14 @@ class VolumeListener(private val context: Context, private val audioManager: Aud
 }
 
 class VolumeBroadcastReceiver(private val events: EventChannel.EventSink?, private val audioManager: AudioManager) : BroadcastReceiver() {
+    private var lastVolume: Double? = null
+
     override fun onReceive(context: Context, intent: Intent?) {
-        events?.success(audioManager.getVolume())
+        val currentVolume = audioManager.getVolume()
+        if (intent?.action == AudioManager.ACTION_HEADSET_PLUG && currentVolume == lastVolume) {
+            return
+        }
+        lastVolume = currentVolume
+        events?.success(currentVolume)
     }
 }
