@@ -90,4 +90,15 @@ class VolumeController {
       MethodArgument.showSystemUI: showSystemUI,
     });
   }
+
+  /// Re-activates the volume listener after another component has changed
+  /// or deactivated the audio session (iOS only).
+  ///
+  /// Call this when another part of your app finishes using the audio session
+  /// (e.g., after a recording screen is dismissed, after a video call ends).
+  /// This re-sets the audio session category and re-activates it so that
+  /// volume change events resume.
+  Future<void> reactivateListener() async {
+    await _methodChannel.invokeMethod(MethodName.reactivateListener);
+  }
 }

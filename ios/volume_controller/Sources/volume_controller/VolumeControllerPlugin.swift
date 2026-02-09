@@ -47,6 +47,9 @@ public class VolumeControllerPlugin: NSObject, FlutterPlugin {
 
       VolumeControllerPlugin.volumeController.setMute(isMute: isMute!, showSystemUI: showSystemUI!)
       result(nil)
+    case MethodName.reactivateListener:
+      VolumeControllerPlugin.volumeListener.reactivateSession()
+      result(nil)
     default:
       result(FlutterMethodNotImplemented)
     }

@@ -10,6 +10,7 @@ class MethodName {
   static const String setVolume = 'setVolume';
   static const String isMuted = 'isMuted';
   static const String setMute = 'setMute';
+  static const String reactivateListener = 'reactivateListener';
 }
 
 class MethodArgument {

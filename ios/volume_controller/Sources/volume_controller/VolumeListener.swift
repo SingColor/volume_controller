@@ -12,6 +12,12 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
 
   init(audioSession: AVAudioSession) {
     self.audioSession = audioSession
+    super.init()
+    registerInterruptionObserver()
+  }
+
+  deinit {
+    removeInterruptionObserver()
   }
 
   public var isObservingVolume: Bool {
@@ -77,5 +83,45 @@ public class VolumeListener: NSObject, FlutterStreamHandler {
 
   public func sendVolumeChangeEvent() {
     eventSink?(audioSession.getVolume())
+  }
+
+  /// Re-activates the audio session and resumes volume observation.
+  /// Call this after another component in the app has changed or deactivated the audio session.
+  public func reactivateSession() {
+    guard isObserving else { return }
+    audioSession.activateAudioSession()
+    sendVolumeChangeEvent()
+  }
+
+  // MARK: - Interruption Handling
+
+  private func registerInterruptionObserver() {
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handleInterruption),
+      name: AVAudioSession.interruptionNotification,
+      object: audioSession)
+  }
+
+  private func removeInterruptionObserver() {
+    NotificationCenter.default.removeObserver(
+      self,
+      name: AVAudioSession.interruptionNotification,
+      object: audioSession)
+  }
+
+  @objc private func handleInterruption(notification: Notification) {
+    guard isObserving,
+      let userInfo = notification.userInfo,
+      let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+      let type = AVAudioSession.InterruptionType(rawValue: typeValue)
+    else {
+      return
+    }
+
+    if type == .ended {
+      audioSession.activateAudioSession()
+      sendVolumeChangeEvent()
+    }
   }
 }
